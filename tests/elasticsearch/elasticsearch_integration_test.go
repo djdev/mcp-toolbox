@@ -116,13 +116,14 @@ func TestElasticsearchToolEndpoints(t *testing.T) {
 	sourceConfig := getElasticsearchVars(t)
 
 	index := "test-index"
+	semanticIndex := "semantic-test-index"
 
 	paramToolStatement, idParamToolStatement, nameParamToolStatement, arrayParamToolStatement, authToolStatement := getElasticsearchQueries(index)
 
 	toolsConfig := getElasticsearchToolsConfig(sourceConfig, ElasticsearchToolType, paramToolStatement, idParamToolStatement, nameParamToolStatement, arrayParamToolStatement, authToolStatement)
 
-	searchStmt := fmt.Sprintf("FROM %s | WHERE embedding IS NOT NULL | EVAL score = COSINE_SIMILARITY(embedding, ?) | SORT score DESC | LIMIT 1 | KEEP id, name", index)
-	insertStmt := fmt.Sprintf("FROM %s | WHERE name == ? OR name == ? | LIMIT 0", index)
+	searchStmt := fmt.Sprintf("FROM %s | WHERE embedding IS NOT NULL | EVAL score = COSINE_SIMILARITY(embedding, ?) | SORT score DESC | LIMIT 1 | KEEP id, name", semanticIndex)
+	insertStmt := fmt.Sprintf("FROM %s | WHERE name == ? OR name == ? | LIMIT 0", semanticIndex)
 	toolsConfig = tests.AddSemanticSearchConfig(t, toolsConfig, ElasticsearchToolType, insertStmt, searchStmt)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsConfig, args...)
@@ -148,15 +149,15 @@ func TestElasticsearchToolEndpoints(t *testing.T) {
 		t.Fatalf("error creating the Elasticsearch client: %s", err)
 	}
 
-	// Delete index if already exists
+	// Delete indices if already exists
 	defer func() {
-		_, err = esapi.IndicesDeleteRequest{
-			Index: []string{index},
-		}.Do(ctx, esClient)
-		if err != nil {
-			t.Fatalf("error deleting index: %s", err)
-		}
-	}()
+    _, err = esapi.IndicesDeleteRequest{
+      Index: []string{index, semanticIndex},
+    }.Do(ctx, esClient)
+    if err != nil {
+      t.Errorf("error deleting indices: %s", err)
+    }
+  }()
 
 	alice := fmt.Sprintf(`{
 									"id": 1,
