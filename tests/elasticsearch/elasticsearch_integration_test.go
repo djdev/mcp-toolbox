@@ -43,7 +43,7 @@ func setupElasticsearchContainer(ctx context.Context, t *testing.T) (string, fun
 	t.Helper()
 
 	req := testcontainers.ContainerRequest{
-		Image:        "docker.elastic.co/elasticsearch/elasticsearch:8.12.2",
+		Image:        "docker.elastic.co/elasticsearch/elasticsearch:9.3.2",
 		ExposedPorts: []string{"9200/tcp"},
 		Env: map[string]string{
 			"discovery.type":         "single-node",
@@ -116,14 +116,13 @@ func TestElasticsearchToolEndpoints(t *testing.T) {
 	sourceConfig := getElasticsearchVars(t)
 
 	index := "test-index"
-	semanticIndex := "semantic-test-index"
 
 	paramToolStatement, idParamToolStatement, nameParamToolStatement, arrayParamToolStatement, authToolStatement := getElasticsearchQueries(index)
 
 	toolsConfig := getElasticsearchToolsConfig(sourceConfig, ElasticsearchToolType, paramToolStatement, idParamToolStatement, nameParamToolStatement, arrayParamToolStatement, authToolStatement)
 
-	searchStmt := fmt.Sprintf("FROM %s | WHERE embedding IS NOT NULL | EVAL score = COSINE_SIMILARITY(embedding, ?) | SORT score DESC | LIMIT 1 | KEEP id, name", semanticIndex)
-	insertStmt := fmt.Sprintf("FROM %s | WHERE name == ? OR name == ? | LIMIT 0", semanticIndex)
+	searchStmt := fmt.Sprintf("FROM %s | WHERE embedding IS NOT NULL | EVAL score = COSINE_SIMILARITY(embedding, ?) | SORT score DESC | LIMIT 1 | KEEP id, name, name.keyword", index)
+	insertStmt := fmt.Sprintf("FROM %s | WHERE name == ? OR name == ? | LIMIT 0", index)
 	toolsConfig = tests.AddSemanticSearchConfig(t, toolsConfig, ElasticsearchToolType, insertStmt, searchStmt)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsConfig, args...)
@@ -151,33 +150,33 @@ func TestElasticsearchToolEndpoints(t *testing.T) {
 
 	// Delete indices if already exists
 	defer func() {
-    _, err = esapi.IndicesDeleteRequest{
-      Index: []string{index, semanticIndex},
-    }.Do(ctx, esClient)
-    if err != nil {
-      t.Errorf("error deleting indices: %s", err)
-    }
-  }()
+		_, err = esapi.IndicesDeleteRequest{
+			Index: []string{index},
+		}.Do(ctx, esClient)
+		if err != nil {
+			t.Errorf("error deleting indices: %s", err)
+		}
+	}()
 
 	alice := fmt.Sprintf(`{
-									"id": 1,
-									"name": "Alice",
-									"email": "%s"
-								}`, tests.ServiceAccountEmail)
+                  "id": 1,
+                  "name": "Alice",
+                  "email": "%s"
+                }`, tests.ServiceAccountEmail)
 
 	// Create index with mapping for vector search
 	mapping := `{
-		"mappings": {
-			"properties": {
-				"embedding": {
-					"type": "dense_vector",
-					"dims": 768,
-					"index": true,
-					"similarity": "cosine"
-				}
-			}
-		}
-	}`
+    "mappings": {
+      "properties": {
+        "embedding": {
+          "type": "dense_vector",
+          "dims": 768,
+          "index": true,
+          "similarity": "cosine"
+        }
+      }
+    }
+  }`
 	res, err := esapi.IndicesCreateRequest{
 		Index: index,
 		Body:  strings.NewReader(mapping),
@@ -238,7 +237,7 @@ func TestElasticsearchToolEndpoints(t *testing.T) {
 
 	// Semantic search tests
 	semanticSearchWant := `[{"id":5,"name":"Semantic","name.keyword":"Semantic"}]`
-	tests.RunSemanticSearchToolInvokeTest(t, "", "", semanticSearchWant)
+	tests.RunSemanticSearchToolInvokeTest(t, "[]", "[]", semanticSearchWant)
 }
 
 func getElasticsearchQueries(index string) (string, string, string, string, string) {
@@ -257,7 +256,7 @@ func getElasticsearchWants() ElasticsearchWants {
 	nullWant := `{"error":{"root_cause":[{"type":"verification_exception","reason":"Found 1 problem\nline 1:25: first argument of [name == ?name] is [text] so second argument must also be [text] but was [null]"}],"type":"verification_exception","reason":"Found 1 problem\nline 1:25: first argument of [name == ?name] is [text] so second argument must also be [text] but was [null]"},"status":400}`
 	mcpMyFailToolWant := `{"content":[{"type":"text","text":"{\"error\":{\"root_cause\":[{\"type\":\"parsing_exception\",\"reason\":\"line 1:1: mismatched input 'SELEC' expecting {, 'row', 'from', 'show'}\"}],\"type\":\"parsing_exception\",\"reason\":\"line 1:1: mismatched input 'SELEC' expecting {, 'row', 'from', 'show'}\",\"caused_by\":{\"type\":\"input_mismatch_exception\",\"reason\":null}},\"status\":400}"}]}`
 	mcpMyToolId3NameAliceWant := fmt.Sprintf(`{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"[{\"email\":\"%[1]s\",\"email.keyword\":\"%[1]s\",\"id\":1,\"name\":\"Alice\",\"name.keyword\":\"Alice\"},{\"email\":null,\"email.keyword\":null,\"id\":3,\"name\":\"Sid\",\"name.keyword\":\"Sid\"}]"}]}}`, tests.ServiceAccountEmail)
-	mcpSelect1Want := fmt.Sprintf(`{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"[{\"email\":\"%[1]s\",\"email.keyword\":\"%[1]s\",\"id\":1,\"name\":\"Alice\",\"name.keyword\":\"Alice\"},{\"email\":\"janedoe@gmail.com\",\"email.keyword\":\"janedoe@gmail.com\",\"id\":2,\"name\":\"Jane\",\"name.keyword\":\"Jane\"},{\"email\":null,\"email.keyword\":null,\"id\":3,\"name\":\"Sid\",\"name.keyword\":\"Sid\"},{\"email\":null,\"email.keyword\":null,\"id\":4,\"name\":\"null\",\"name.keyword\":\"null\"},{\"email\":null,\"email.keyword\":null,\"id\":5,\"name\":\"Semantic\",\"name.keyword\":\"Semantic\"}]"}]}}`, tests.ServiceAccountEmail)
+	mcpSelect1Want := fmt.Sprintf(`{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"[{\"email\":\"%[1]s\",\"email.keyword\":\"%[1]s\",\"id\":1,\"name\":\"Alice\",\"name.keyword\":\"Alice\"},{\"email\":\"janedoe@gmail.com\",\"email.keyword\":\"janedoe@gmail.com\",\"id\":2,\"name\":\"Jane\",\"name.keyword\":\"Jane\"},{\"email\":null,\"email.keyword\":null,\"id\":3,\"name\":\"Sid\",\"name.keyword\":\"Sid\"},{\"email\":null,\"email.keyword\":null,\"id\":4,\"name\":\"null\",\"name.keyword\":\"null\"},{\"email\":null,\"email.keyword\":null,\"id\":5,\"name":"Semantic\",\"name.keyword":"Semantic\"}]"}]}}`, tests.ServiceAccountEmail)
 
 	return ElasticsearchWants{
 		Select1:               select1Want,
