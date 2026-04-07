@@ -109,7 +109,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	query := t.Query
-	singleMap := make(map[string]any)
 	paramMap := params.AsMap()
 	// If a query is provided in the params and not already set in the tool, use it.
 	if queryVal, ok := paramMap["query"]; ok {
@@ -121,13 +120,19 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		delete(paramMap, "query")
 	}
 
+	var paramsList []map[string]any
 	for _, param := range t.Parameters {
 		if param.GetType() == "array" {
 			return nil, util.NewAgentError("array parameters are not supported yet", nil)
 		}
-		singleMap[param.GetName()] = paramMap[param.GetName()]
+
+		// ES|QL requires an array of single-key objects for named parameters
+		if val, ok := paramMap[param.GetName()]; ok {
+			paramsList = append(paramsList, map[string]any{param.GetName(): val})
+		}
 	}
-	resp, err := source.RunSQL(ctx, t.Format, query, []map[string]any{singleMap})
+
+	resp, err := source.RunSQL(ctx, t.Format, query, paramsList)
 	if err != nil {
 		return nil, util.ProcessGeneralError(err)
 	}
