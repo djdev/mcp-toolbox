@@ -121,8 +121,8 @@ func TestElasticsearchToolEndpoints(t *testing.T) {
 
 	toolsConfig := getElasticsearchToolsConfig(sourceConfig, ElasticsearchToolType, paramToolStatement, idParamToolStatement, nameParamToolStatement, arrayParamToolStatement, authToolStatement)
 
-	searchStmt := fmt.Sprintf("FROM %s | WHERE embedding IS NOT NULL | EVAL score = COSINE_SIMILARITY(embedding, ?query) | SORT score DESC | LIMIT 1 | KEEP id, name", index)
-	insertStmt := fmt.Sprintf("FROM %s | WHERE name == ?content AND embedding == ?text_to_embed | LIMIT 0", index)
+	searchStmt := fmt.Sprintf(`FROM %s | WHERE KNN(embedding, ?query) | LIMIT 1 | KEEP id, name`, index)
+	insertStmt := fmt.Sprintf("FROM %s | WHERE name == ?content | EVAL dummy = ?text_to_embed | LIMIT 0", index)
 	toolsConfig = tests.AddSemanticSearchConfig(t, toolsConfig, ElasticsearchToolType, insertStmt, searchStmt)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsConfig, args...)
@@ -236,7 +236,7 @@ func TestElasticsearchToolEndpoints(t *testing.T) {
 	tests.RunMCPToolCallMethod(t, wants.McpMyFailTool, wants.McpSelect1, tests.WithMcpMyToolId3NameAliceWant(wants.McpMyToolId3NameAlice))
 
 	// Semantic search tests
-	semanticSearchWant := `[{"id":5,"name":"Semantic","name.keyword":"Semantic"}]`
+	semanticSearchWant := `[{"id":5,"name":"Semantic"}]`
 	tests.RunSemanticSearchToolInvokeTest(t, "[]", "[]", semanticSearchWant)
 }
 
