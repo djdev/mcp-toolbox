@@ -862,17 +862,13 @@ func RunMCPPostgresListTriggersTest(t *testing.T, ctx context.Context, pool *pgx
 			if mcpResp.Result.IsError {
 				t.Fatalf("list_triggers returned error result: %v", mcpResp.Result)
 			}
-			var gotObj []map[string]any
-			for _, content := range mcpResp.Result.Content {
-				got := content.Text
-				if got == "null" {
-					continue
-				}
-				items, err := unmarshalMCPResult[map[string]any](got)
+			gotObj := []map[string]any{}
+			got := getMCPResultText(mcpResp)
+			if got != "null" {
+				gotObj, err = unmarshalMCPResult[map[string]any](got)
 				if err != nil {
 					t.Fatalf("failed to unmarshal nested result string: %v", err)
 				}
-				gotObj = append(gotObj, items...)
 			}
 
 			if tc.compareSubset {
