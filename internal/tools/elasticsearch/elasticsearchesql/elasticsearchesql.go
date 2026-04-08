@@ -110,7 +110,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	query := t.Query
 	paramMap := params.AsMap()
-	
+
 	var paramsList []map[string]any
 	for _, param := range t.Parameters {
 		if param.GetType() == "array" {

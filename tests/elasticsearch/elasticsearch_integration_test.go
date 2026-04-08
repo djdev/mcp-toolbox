@@ -331,34 +331,6 @@ func getElasticsearchToolsConfig(sourceConfig map[string]any, toolType, paramToo
 					},
 				},
 			},
-			"my-array-tool": map[string]any{
-				"type":        toolType,
-				"source":      "my-instance",
-				"description": "Tool to test invocation with array params.",
-				"query":       arrayToolStatement,
-				"parameters": []any{
-					map[string]any{
-						"name":        "idArray",
-						"type":        "array",
-						"description": "ID array",
-						"items": map[string]any{
-							"name":        "id",
-							"type":        "integer",
-							"description": "ID",
-						},
-					},
-					map[string]any{
-						"name":        "nameArray",
-						"type":        "array",
-						"description": "user name array",
-						"items": map[string]any{
-							"name":        "name",
-							"type":        "string",
-							"description": "user name",
-						},
-					},
-				},
-			},
 			"my-auth-tool": map[string]any{
 				"type":        toolType,
 				"source":      "my-instance",
