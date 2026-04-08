@@ -52,6 +52,7 @@ parameters:
 ### Example with Vector Search
 
 You can perform vector-based semantic searches in ES|QL. By combining this with the `embeddedBy` parameter property, you can automatically convert text queries into vector embeddings before executing the search.
+Elasticsearch **8.0** or higher is required to perform vector search within ES|QL.
 
 #### Vector Search
 
