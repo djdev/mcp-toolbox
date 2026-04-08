@@ -49,7 +49,7 @@ type Config struct {
 	Source       string                 `yaml:"source" validate:"required"`
 	Description  string                 `yaml:"description" validate:"required"`
 	AuthRequired []string               `yaml:"authRequired" validate:"required"`
-	Query        string                 `yaml:"query"`
+	Query        string                 `yaml:"query" validate:"required"`
 	Format       string                 `yaml:"format"`
 	Timeout      int                    `yaml:"timeout"`
 	Parameters   parameters.Parameters  `yaml:"parameters"`
@@ -110,16 +110,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	query := t.Query
 	paramMap := params.AsMap()
-	// If a query is provided in the params and not already set in the tool, use it.
-	if queryVal, ok := paramMap["query"]; ok {
-		if str, ok := queryVal.(string); ok && t.Query == "" {
-			query = str
-		}
-
-		// Drop the query param if not a string or if the tool already has a query.
-		delete(paramMap, "query")
-	}
-
+	
 	var paramsList []map[string]any
 	for _, param := range t.Parameters {
 		if param.GetType() == "array" {
