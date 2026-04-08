@@ -143,8 +143,8 @@ func InvokeMCPTool(t *testing.T, toolName string, arguments map[string]any, requ
 	return resp.StatusCode, &mcpResp, nil
 }
 
-// getMCPResultText safely extracts the text from content blocks, reconstructing an array if there are multiple items.
-func getMCPResultText(resp *MCPCallToolResponse) string {
+// GetMCPResultText safely extracts the text from content blocks, reconstructing an array if there are multiple items.
+func GetMCPResultText(resp *MCPCallToolResponse) string {
 	if len(resp.Result.Content) == 0 {
 		return "[]"
 	}
@@ -287,7 +287,7 @@ func RunMCPCustomToolCallMethod(t *testing.T, toolName string, arguments map[str
 	if mcpResp.Result.IsError {
 		t.Fatalf("%s returned error result: %v", toolName, mcpResp.Result)
 	}
-	got := getMCPResultText(mcpResp)
+	got := GetMCPResultText(mcpResp)
 	if !strings.Contains(got, want) {
 		t.Fatalf(`expected %q to contain %q`, got, want)
 	}
@@ -385,7 +385,7 @@ func RunMCPToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTes
 			if mcpResp.Result.IsError {
 				t.Fatalf("%s returned error result: %v", tc.toolName, mcpResp.Result)
 			}
-			got := getMCPResultText(mcpResp)
+			got := GetMCPResultText(mcpResp)
 			if !strings.Contains(got, tc.wantResult) {
 				t.Fatalf(`expected %q to contain %q`, got, tc.wantResult)
 			}
@@ -471,7 +471,7 @@ func RunMCPPostgresListViewsTest(t *testing.T, ctx context.Context, pool *pgxpoo
 				t.Fatalf("list_views returned error result: %v", mcpResp.Result)
 			}
 
-			got := getMCPResultText(mcpResp)
+			got := GetMCPResultText(mcpResp)
 			gotObj, err := unmarshalMCPResult[map[string]any](got)
 			if err != nil {
 				t.Fatalf("failed to unmarshal nested result string: %v", err)
@@ -556,7 +556,7 @@ func RunMCPPostgresListSchemasTest(t *testing.T, ctx context.Context, pool *pgxp
 				t.Fatalf("list_schemas returned error result: %v", mcpResp.Result)
 			}
 			gotObj := []map[string]any{}
-			got := getMCPResultText(mcpResp)
+			got := GetMCPResultText(mcpResp)
 			if got != "null" {
 				gotObj, err = unmarshalMCPResult[map[string]any](got)
 				if err != nil {
@@ -670,7 +670,7 @@ func RunMCPPostgresListActiveQueriesTest(t *testing.T, ctx context.Context, pool
 				t.Fatalf("list_active_queries returned error result: %v", mcpResp.Result)
 			}
 			var details []queryListDetails
-			got := getMCPResultText(mcpResp)
+			got := GetMCPResultText(mcpResp)
 			if got != "null" {
 				details, err = unmarshalMCPResult[queryListDetails](got)
 				if err != nil {
@@ -863,7 +863,7 @@ func RunMCPPostgresListTriggersTest(t *testing.T, ctx context.Context, pool *pgx
 				t.Fatalf("list_triggers returned error result: %v", mcpResp.Result)
 			}
 			gotObj := []map[string]any{}
-			got := getMCPResultText(mcpResp)
+			got := GetMCPResultText(mcpResp)
 			if got != "null" {
 				gotObj, err = unmarshalMCPResult[map[string]any](got)
 				if err != nil {
@@ -965,7 +965,7 @@ func RunMCPPostgresListSequencesTest(t *testing.T, ctx context.Context, pool *pg
 				t.Fatalf("list_sequences returned error result: %v", mcpResp.Result)
 			}
 			gotObj := []map[string]any{}
-			got := getMCPResultText(mcpResp)
+			got := GetMCPResultText(mcpResp)
 			if got != "null" {
 				gotObj, err = unmarshalMCPResult[map[string]any](got)
 				if err != nil {
@@ -1293,7 +1293,7 @@ func RunMCPPostgresListStoredProcedureTest(t *testing.T, ctx context.Context, po
 				t.Fatalf("list_stored_procedure returned error result: %v", mcpResp.Result)
 			}
 			var gotObj []storedProcedureDetails
-			got := getMCPResultText(mcpResp)
+			got := GetMCPResultText(mcpResp)
 			if got != "null" {
 				gotObj, err = unmarshalMCPResult[storedProcedureDetails](got)
 				if err != nil {

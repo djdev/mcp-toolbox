@@ -198,10 +198,7 @@ func TestAlloyDBAINLCallTool(t *testing.T) {
 				if mcpResp.Result.IsError {
 					t.Fatalf("expected success result, got tool error: %v", mcpResp.Result)
 				}
-				if len(mcpResp.Result.Content) == 0 {
-					t.Fatalf("expected at least one content item, got none")
-				}
-				got := mcpResp.Result.Content[0].Text
+				got := tests.GetMCPResultText(mcpResp)
 				if got != tc.want {
 					t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
 				}
