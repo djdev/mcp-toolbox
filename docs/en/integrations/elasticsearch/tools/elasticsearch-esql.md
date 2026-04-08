@@ -42,51 +42,25 @@ parameters:
 
 ### Example with Vector Search
 
-You can perform vector-based semantic searches using the `COSINE_SIMILARITY` function in ES|QL. By combining this with the embeddedBy parameter property, you can automatically convert text queries into vector embeddings before executing the search.
-
-#### Vector Ingestion
-
-```yaml
-kind: tool
-name: ingest_vector_doc
-type: elasticsearch-esql
-source: elasticsearch-source
-description: Prepares a document with its vector embedding for ingestion.
-query: |
-  FROM my-index
-  | WHERE name == ?name
-  | LIMIT 0
-parameters:
-  - name: name
-    type: string
-    description: The name of the document.
-  - name: content
-    type: string
-    description: The text content to be embedded.
-  - name: content_vector
-    type: string
-    description: The generated vector for the content.
-    embeddedBy: my-embedding-model
-    valueFromParam: content
-```
+You can perform vector-based semantic searches in ES|QL. By combining this with the `embeddedBy` parameter property, you can automatically convert text queries into vector embeddings before executing the search.
 
 #### Vector Search
+
+This tool uses the KNN function to find the most relevant document based on a query string.
 
 ```yaml
 kind: tool
 name: semantic_search
 type: elasticsearch-esql
 source: elasticsearch-source
-description: Finds documents most relevant to the user query.
+description: Finds the most relevant document using semantic search.
 query: |
-  FROM my-index
-  | WHERE embedding IS NOT NULL
-  | EVAL score = COSINE_SIMILARITY(embedding, ?)
-  | SORT score DESC
-  | LIMIT 1
-  | KEEP id, content, score
+  FROM my-index 
+  | WHERE KNN(embedding, ?query_vector) 
+  | LIMIT 1 
+  | KEEP id, name
 parameters:
-  - name: query_text
+  - name: query_vector
     type: string
     description: The text to search for.
     embeddedBy: my-embedding-model
