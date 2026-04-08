@@ -1330,10 +1330,10 @@ func RunMCPPostgresDatabaseOverviewTest(t *testing.T, ctx context.Context, pool 
 	if mcpResp.Result.IsError {
 		t.Fatalf("database_overview returned error result: %v", mcpResp.Result)
 	}
-	if len(mcpResp.Result.Content) == 0 {
+	got := GetMCPResultText(mcpResp)
+	if got == "[]" {
 		t.Fatalf("database_overview returned empty content field")
 	}
-	got := mcpResp.Result.Content[0].Text
 
 	var gotObj []map[string]any
 	if got != "null" {
@@ -1405,10 +1405,10 @@ func RunMCPPostgresListLocksTest(t *testing.T, ctx context.Context, pool *pgxpoo
 	if mcpResp.Result.IsError {
 		t.Fatalf("list_locks returned error result: %v", mcpResp.Result)
 	}
-	if len(mcpResp.Result.Content) == 0 {
+	got := GetMCPResultText(mcpResp)
+	if got == "[]" {
 		t.Fatalf("list_locks returned empty content field")
 	}
-	got := mcpResp.Result.Content[0].Text
 
 	var gotObj []map[string]any
 	if got != "null" {
@@ -1537,14 +1537,14 @@ func RunMCPPostgresGetColumnCardinalityTest(t *testing.T, ctx context.Context, p
 			if mcpResp.Result.IsError {
 				t.Fatalf("get_column_cardinality returned error result: %v", mcpResp.Result)
 			}
-			if len(mcpResp.Result.Content) == 0 {
+			got := GetMCPResultText(mcpResp)
+			if got == "[]" {
 				if tc.shouldHaveData {
 					t.Fatalf("get_column_cardinality returned empty content field")
 				}
 				t.Logf("DEBUG: get_column_cardinality returned empty content as expected for non-existent table")
 				return
 			}
-			got := mcpResp.Result.Content[0].Text
 
 			var gotObj []map[string]any
 			if got != "null" {
@@ -1814,10 +1814,10 @@ func RunMCPPostgresListPublicationTablesTest(t *testing.T, ctx context.Context, 
 	if mcpResp.Result.IsError {
 		t.Fatalf("list_publication_tables returned error result: %v", mcpResp.Result)
 	}
-	if len(mcpResp.Result.Content) == 0 {
+	got := GetMCPResultText(mcpResp)
+	if got == "[]" {
 		t.Fatalf("list_publication_tables returned empty content field")
 	}
-	got := mcpResp.Result.Content[0].Text
 
 	var gotObj []map[string]any
 	if got != "null" {
@@ -1895,10 +1895,10 @@ func RunMCPPostgresListPgSettingsTest(t *testing.T, ctx context.Context, pool *p
 	if mcpResp.Result.IsError {
 		t.Fatalf("list_pg_settings returned error result: %v", mcpResp.Result)
 	}
-	if len(mcpResp.Result.Content) == 0 {
+	got := GetMCPResultText(mcpResp)
+	if got == "[]" {
 		t.Fatalf("list_pg_settings returned empty content field")
 	}
-	got := mcpResp.Result.Content[0].Text
 
 	var gotObj []map[string]any
 	if got != "null" {
@@ -1956,10 +1956,10 @@ func RunMCPPostgresListDatabaseStatsTest(t *testing.T, ctx context.Context, pool
 	if mcpResp.Result.IsError {
 		t.Fatalf("list_database_stats returned error result: %v", mcpResp.Result)
 	}
-	if len(mcpResp.Result.Content) == 0 {
+	got := GetMCPResultText(mcpResp)
+	if got == "[]" {
 		t.Fatalf("list_database_stats returned empty content field")
 	}
-	got := mcpResp.Result.Content[0].Text
 
 	var gotObj []map[string]any
 	if got != "null" {
@@ -2036,10 +2036,10 @@ func RunMCPPostgresListRolesTest(t *testing.T, ctx context.Context, pool *pgxpoo
 	if mcpResp.Result.IsError {
 		t.Fatalf("list_roles returned error result: %v", mcpResp.Result)
 	}
-	if len(mcpResp.Result.Content) == 0 {
+	got := GetMCPResultText(mcpResp)
+	if got == "[]" {
 		t.Fatalf("list_roles returned empty content field")
 	}
-	got := mcpResp.Result.Content[0].Text
 
 	var gotObj []map[string]any
 	if got != "null" {
